@@ -21,7 +21,11 @@
 ;; Example: (and '(#f (error "should not evaluate this because first argument is false")))
 ;;    ==>   #f
 (define (and expression)
-  (todo))
+  (match expression
+    [(list) #t]
+    [(list-rest head tail) (if head (and tail) #f)]
+    )
+)
 
 ;; Implement boolean OR across a list of booleans. You should implment this
 ;; recursively, and you *cannot* use the built-in ``or`` macro. This function
@@ -41,7 +45,11 @@
 ;; Example: (or '(#t (error "should not evaluate this because first argument is false")))
 ;;    ==>   #t
 (define (or expression)
-  (todo))
+  (match expression
+    [(list) #f]
+    [(list-rest head tail) (if head #t (or tail))]
+    )
+)
 
 ;; Implement boolean NOT on a single boolean. You *cannot* use the built-in
 ;; ``not`` macro. This function will always be passed a single argument.
