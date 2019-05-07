@@ -62,7 +62,8 @@
 ;; Example: (not #f)
 ;;    ==>   #t
 (define (not expression)
-  (todo))
+  (if expression #f #t)
+)
 
 ;; Implement a function to simplify XOR, IMPLIES, and IFF statements to OR,
 ;; AND, and NOT statements. There are no specific requirements for how this
@@ -98,7 +99,7 @@
 ;; Example: (boolean-simplify '(implies (implies a b) b))
 ;;    ==>   '(or (not (or (not a) b)) b)
 (define (boolean-simplify expression)
-  (todo))
+  (print (car (cdr expression))))
 
 ;; Implement a function that evaluates whether a given boolean expression is
 ;; true or false. You are given the expression (which may contain literal
