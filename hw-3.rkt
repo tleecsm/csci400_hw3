@@ -99,7 +99,20 @@
 ;; Example: (boolean-simplify '(implies (implies a b) b))
 ;;    ==>   '(or (not (or (not a) b)) b)
 (define (boolean-simplify expression)
-  (print (car (cdr expression))))
+  (match expression
+    [(list-rest (? list? head) tail) (boolean-simplify head)]
+    [(list-rest head a b) (if (list? (car b))
+                       (if (eqv? head 'implies) `(or (not ,(boolean-simplify a)) ,(boolean-simplify b))
+                              (if (eqv? head 'xor) `(or (and ,(boolean-simplify a) (not ,(boolean-simplify b))) (and (not ,(boolean-simplify a)) ,(boolean-simplify b)))
+                                  (if (eqv? head 'iff) `(or (and ,(boolean-simplify a) ,(boolean-simplify b)) (and (not ,(boolean-simplify a)) (not ,(boolean-simplify b))))
+                                      `(,head ,(boolean-simplify a) ,(boolean-simplify b)))))
+         (if (eqv? head 'implies) `(or (not ,(boolean-simplify a)) ,@(boolean-simplify b))
+                              (if (eqv? head 'xor) `(or (and ,(boolean-simplify a) (not ,@(boolean-simplify b))) (and (not ,(boolean-simplify a)) ,@(boolean-simplify b)))
+                                  (if (eqv? head 'iff) `(or (and ,(boolean-simplify a) ,@(boolean-simplify b)) (and (not ,(boolean-simplify a)) (not ,@(boolean-simplify b))))
+                                      `(,head ,(boolean-simplify a) ,@(boolean-simplify b))))))]
+    [x x]
+    )
+  )
 
 ;; Implement a function that evaluates whether a given boolean expression is
 ;; true or false. You are given the expression (which may contain literal
@@ -127,16 +140,26 @@
 ;;    ==>   #f
 ;; Example: (boolean-eval '(and) #hash())
 ;;    ==>   #t
-;; Example: (boolean-eval '(and #t b) #hash((a . #t) (b . #t))
+;; Example: (boolean-eval '(and #t b) #hash((a . #t) (b . #t)))
 ;;    ==>   #t
-;; Example: (boolean-eval '(and a b) #hash((a . #t) (b . #t))
+;; Example: (boolean-eval '(and a b) #hash((a . #t) (b . #t)))
 ;;    ==>   #t
 ;; Example: (boolean-eval '(iff a (and x y)) #hash((a . #f) (b . #t) (x . #f) (y . #t)))
 ;;    ==>   #t
 (define (boolean-eval expression bindings)
   (define/match (rec expression)
-    [(_) (todo)]
-
+    [((? boolean? a)) (if a #t #f)]
+    [((? symbol? a)) (dict-ref bindings a)]
+    [((list-rest head (? null? tail)))
+       (if (eqv? head 'or) (or tail)
+       (if (eqv? head 'and) (and tail)
+       (if (eqv? head 'not) (not tail)
+       (error "invalid expression" expression))))]
+    [((list-rest head tail))
+       (if (eqv? head 'or) (or (list (rec (car tail)) (rec (car (cdr tail)))))
+       (if (eqv? head 'and) (and (list (rec (car tail)) (rec (car (cdr tail)))))
+       (if (eqv? head 'not) (not (rec (car tail)))
+       (error "invalid expression" expression))))]
     ; This is the error which you need to throw if the expression is not an
     ; AND, OR, or NOT.
     [(_) (error "invalid expression" expression)])
