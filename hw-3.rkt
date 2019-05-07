@@ -101,6 +101,11 @@
 (define (boolean-simplify expression)
   (match expression
     [(list-rest (? list? head) tail) (boolean-simplify head)]
+    [(list-rest head a (? null? b)) 
+         (if (eqv? head 'implies) `(or (not ,(boolean-simplify a)) ,@(boolean-simplify b))
+                              (if (eqv? head 'xor) `(or (and ,(boolean-simplify a) (not ,@(boolean-simplify b))) (and (not ,(boolean-simplify a)) ,@(boolean-simplify b)))
+                                  (if (eqv? head 'iff) `(or (and ,(boolean-simplify a) ,@(boolean-simplify b)) (and (not ,(boolean-simplify a)) (not ,@(boolean-simplify b))))
+                                      `(,head ,(boolean-simplify a) ,@(boolean-simplify b)))))]
     [(list-rest head a b) (if (list? (car b))
                        (if (eqv? head 'implies) `(or (not ,(boolean-simplify a)) ,(boolean-simplify b))
                               (if (eqv? head 'xor) `(or (and ,(boolean-simplify a) (not ,(boolean-simplify b))) (and (not ,(boolean-simplify a)) ,(boolean-simplify b)))
